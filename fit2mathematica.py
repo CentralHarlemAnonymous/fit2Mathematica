@@ -11,21 +11,26 @@ sys.path.append(PROJECT_PATH)
 from fitparse import Activity
 
 quiet = 'quiet' in sys.argv or '-q' in sys.argv
-#filenames = None
-filenames = [os.path.join(PROJECT_PATH, 'tests', 'data', '2016-04-30-21-57-29.fit')]
-outFile = os.path.join(PROJECT_PATH, 'tests', 'data', '2016-04-30-21-57-29.txt')
+filenames = None
 
 if len(sys.argv) >= 2:
     filenames = [f for f in sys.argv[1:] if os.path.exists(f)]
 
 if not filenames:
-    filenames = [os.path.join(PROJECT_PATH, 'tests', 'data', 'sample-activity.fit')]
+	#debugging to disk because there's no way to pass this back to Mathematica
+	outFile = os.path.join(PROJECT_PATH, 'scripts', 'debug.txt')
+	file = open(outFile,"w")
+	file.write("not filenames.")
+	file.write('sys.argv[1:]: [%s]' % ', '.join(map(str, sys.argv[1:])))
+	file.close()
+	# original line appears below
+	filenames = [os.path.join(PROJECT_PATH, 'tests', 'data', 'debug.fit')] # presumes a file called debug.fit exists at this location. Add one or change this lines if needed.
 
 def print_record(rec, ):
     global record_number
     global localString
     record_number += 1
-    if record_number <= 9999999:  # for debugging, limits output to five records
+    if record_number <= 9999999:  # for debugging, limits output to specified number of records
         localString += ("\n<|\"record number\"-> %d, \"type\"-> \"%s\", \"fields\"->{" % (record_number, rec.type.name))
         shortFields = rec.fields[0:99] # for debugging, limits the number of fields per record
         for field in shortFields:
@@ -37,7 +42,7 @@ def print_record(rec, ):
 
 # the program as such starts below
 for f in filenames:
-    #first prints a header?
+    #displays a header so you know it has started
     if quiet:
         print f
     else:
@@ -50,8 +55,10 @@ for f in filenames:
     a.parse(print_record) # calls the interesting function
     localString = localString[:-2]
     localString += "\n}"
+    newpath, tail = os.path.split(f)	# parts of the path and filename for the file we're parsing
+    tail = tail[:-3]
+    tail+="txt"
+    outFile = os.path.join(newpath, tail)
     file = open(outFile,"w")
     file.write(localString)
     file.close()
-#    print (" %s " % (localString))
-
